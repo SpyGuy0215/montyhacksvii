@@ -65,6 +65,7 @@ export default function SignUp({ navigation }) {
               placeholderTextColor="#2F3E46"
               style={styles.input}
               onChangeText={(data) => setPassword(data)}
+              secureTextEntry={true}
             />
           </View>
           <View style={styles.buttonContainer}>

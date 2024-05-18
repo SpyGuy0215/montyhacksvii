@@ -1,5 +1,5 @@
 import { StatusBar } from "expo-status-bar";
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View, LogBox } from "react-native";
 
 import { initializeApp } from "firebase/app";
 
@@ -14,6 +14,9 @@ import Search from "./app/Search";
 import Info from "./app/Info";
 
 const Stack = createNativeStackNavigator();
+
+LogBox.ignoreAllLogs(true);
+
 
 export default function App() {
   return (

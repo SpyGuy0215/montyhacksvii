@@ -53,6 +53,7 @@ export default function Login({ navigation }) {
               style={styles.input}
               textContentType="password"
               onChangeText={(data) => setPassword(data)}
+              secureTextEntry={true}
             />
           </View>
           <View style={styles.buttonContainer}>
