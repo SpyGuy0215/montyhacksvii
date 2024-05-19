@@ -83,7 +83,6 @@ function ListedOpportunities({ navigation, text }) {
   return (
     <TouchableOpacity
       style={styles.listItem}
-      onPress={() => navigation.navigate("Info")}
     >
       <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
         <Text style={styles.itemStyle}>{text}</Text>
