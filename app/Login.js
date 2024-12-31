@@ -1,151 +1,118 @@
-import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  StyleSheet,
-} from "react-native";
-import { StatusBar } from "expo-status-bar";
-import {useState} from 'react';
-import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
+import React from "react";
+import { useState } from "react";
+import { Alert, Text, StyleSheet, TextInput, TouchableOpacity, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { useNavigation } from "@react-navigation/native";
+import app from '../firebaseConfig'
+import { getAuth, signInWithEmailAndPassword, signOut, sendPasswordResetEmail } from "firebase/auth";
 
-import app from "../firebaseConfig";
+export default function Login(){
+    const navigation = useNavigation();
 
-export default function Login({ navigation }) {
-    const [email, setEmail] = useState('null');
-    const [password, setPassword] = useState('null');
-    const [user, setUser] = useState('');
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [showError, setShowError] = useState(false);
+    const [error, setError] = useState('');
 
     function handleLogin(){
-        const auth = getAuth(app);
+        const auth = getAuth(); 
         signInWithEmailAndPassword(auth, email, password)
-        .then(async (userCredential) => {
-            setUser(userCredential.user);
-            navigation.navigate("Home", {user: userCredential.user});
+        .then((userCredential) => {
+            console.log(userCredential);
+            if(!userCredential.user.emailVerified){
+                setError('Please verify your email.');
+                setShowError(true);
+                signOut(auth);
+                return;
+            }
+            navigation.navigate("Profile");
         })
         .catch((error) => {
-            const errorCode = error.code;
-            const errorMessage = error.message;
-            console.log(errorCode, errorMessage);
-        });
+            console.log(error.code);
+            if(error.code === 'auth/invalid-credential'){
+                setError('Invalid credentials.');
+                setShowError(true);
+            }
+            else if(error.code === 'auth/too-many-requests'){
+                setError('Too many requests. Please try again later.');
+                setShowError(true); 
+            }
+        })
     }
 
-  return (
-    <View style={styles.container}>
-      <StatusBar style="light" hidden={true} />
-      <View style={styles.innerContainer}>
-        <View style={styles.header}>
-          <Text style={styles.headerText}>Civic Union</Text>
-        </View>
-        <View style={styles.inputContainer}>
-          <View style={styles.inputWrapper}>
-            <TextInput
-              placeholder="Email"
-              placeholderTextColor="#2F3E46"
-              style={styles.input}
-              onChangeText={(data) => setEmail(data)}
-            />
-          </View>
-          <View style={styles.inputWrapper}>
-            <TextInput
-              placeholder="Password"
-              placeholderTextColor="#2F3E46"
-              style={styles.input}
-              textContentType="password"
-              onChangeText={(data) => setPassword(data)}
-              secureTextEntry={true}
-            />
-          </View>
-          <View style={styles.buttonContainer}>
-            <TouchableOpacity style={styles.button} onPress={() => handleLogin()}>
-              <Text
-                style={styles.buttonText}
-              >
-                Login
-              </Text>
-            </TouchableOpacity>
-          </View>
-          <View style={styles.signUpContainer}>
-            <View style={styles.row}>
-              <Text>Don't have an account?</Text>
-              <TouchableOpacity onPress={() => navigation.navigate("SignUp")}>
-                <Text style={styles.signUpText}>Sign up</Text>
-              </TouchableOpacity>
+    function handleResetPassword(){
+        const auth = getAuth();
+        sendPasswordResetEmail(auth, email)
+        .then(() => {
+            Alert.alert('Password Reset Email Sent', 'Please check your email to reset your password.');
+        })
+        .catch((error) => {
+            console.log(error.code);
+            console.log(error.message);
+        })
+    }
+
+    return(
+        <SafeAreaView style={styles.container}>
+            <Text style={styles.header}>Civic Union</Text>
+            <TextInput style={styles.input} placeholder="Email" onChangeText={(email) => {setEmail(email)}}/>
+            <TextInput style={styles.input} placeholder="Password" autoCorrect={false} secureTextEntry={true} onChangeText={(pwd) => {setPassword(pwd)}}/>
+            <View style={styles.errorView}>
+                {showError && <Text style={{color: 'red'}}>{error}</Text>}
             </View>
-          </View>
-        </View>
-      </View>
-    </View>
-  );
+            <TouchableOpacity style={styles.button} onPress={() => handleLogin()}>
+                <Text style={{fontSize: 20}}>Login</Text>
+            </TouchableOpacity>
+            <View style={{flexDirection: 'row', justifyContent: 'center', marginTop: 20}}>
+                <Text>Don't have an account? </Text>
+                <TouchableOpacity onPress={() => navigation.navigate("SignUp")}>
+                    <Text style={{color: '#007BFF'}}>Sign Up</Text>
+                </TouchableOpacity>
+            </View>
+            <TouchableOpacity style={styles.button} onPress={() => handleResetPassword()}>
+                <Text style={{fontSize: 15, fontWeight: 'bold', alignSelf: 'center'}}>Reset Password</Text>
+            </TouchableOpacity>
+        </SafeAreaView>
+    )
 }
 
 const styles = StyleSheet.create({
-  container: {
-    backgroundColor: "#CAD2C5",
-    height: "100%",
-    width: "100%",
-  },
-  innerContainer: {
-    height: "100%",
-    width: "100%",
-    justifyContent: "flex-start",
-    paddingTop: 20,
-    paddingBottom: 15,
-  },
-  header: {
-    alignItems: "center",
-    marginTop: 130,
-  },
-  headerText: {
-    color: "#354F52",
-    fontWeight: "bold",
-    letterSpacing: 3,
-    fontSize: 45,
-  },
-  inputContainer: {
-    alignItems: "center",
-    marginHorizontal: 16,
-    spaceBetween: 16,
-    marginTop: 45,
-  },
-  inputWrapper: {
-    backgroundColor: "#B0C4B1",
-    padding: 16,
-    borderRadius: 20,
-    width: "100%",
-    marginBottom: 20,
-  },
-  input: {
-    color: "#2F3E46",
-  },
-  buttonContainer: {
-    width: "100%",
-    marginTop: 10,
-  },
-  button: {
-    width: "100%",
-    backgroundColor: "#52796F",
-    padding: 12,
-    borderRadius: 20,
-    marginTop: 25,
-  },
-  buttonText: {
-    fontSize: 22,
-    fontWeight: "bold",
-    color: "white",
-    textAlign: "center",
-  },
-  signUpContainer: {
-    alignItems: "center",
-    marginTop: 20,
-  },
-  row: {
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  signUpText: {
-    color: "#5EB9A2", // Sky blue color
-    marginLeft: 5,
-  },
-});
+    container: {
+        flex: 1,
+        backgroundColor: 'white',
+    },
+    header: {
+        fontSize: 45,
+        fontWeight: '700',
+        textAlign: 'center',
+        marginTop: 50,
+        marginBottom: 35
+    },
+    input:{
+        borderWidth: 1, 
+        borderRadius: 4,
+        width: '90%',
+        height: 60, 
+        alignSelf: 'center',
+        marginTop: 30,
+        padding: 8
+    },
+    button: {
+        backgroundColor: '#86DEB7',
+        width: '90%',
+        height: 60,
+        alignSelf: 'center',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginTop: 30,
+        borderRadius: 4
+    },
+    errorView: {
+        height: 20,
+        width: '90%',
+        alignSelf: 'center',
+        marginTop: 10,
+        justifyContent: 'center',
+        alignItems: 'center'
+    }
+})

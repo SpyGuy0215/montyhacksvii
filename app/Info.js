@@ -1,15 +1,33 @@
 import { useNavigation } from "@react-navigation/native";
-import { roundToNearestPixel } from "nativewind";
 import React, {useState} from "react";
-import { SafeAreaView, Text, Image, ScrollView, Pressable, StyleSheet } from "react-native";
+import { SafeAreaView, Text, Image, ScrollView, Pressable, StyleSheet, View } from "react-native";
 import * as Haptics from "expo-haptics";
 import * as WebBrowser from "expo-web-browser";
 
 export default function Info({route}) {
-    const navigation = useNavigation();
     const item = route.params.item;
+
+    const [favorite, setFavorite] = useState(false);
+
+    function handleFavorite() {
+        if(favorite){
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        }
+        else{
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+        }
+        setFavorite(!favorite);
+    }
+
     return (
         <SafeAreaView style={{flex: 1, backgroundColor: 'white'}}>
+            <View style={{flexDirection: 'row', justifyContent: 'space-between', marginTop: 10, marginLeft: 15, marginRight: 15}}>
+                <Pressable onPress={() => handleFavorite()}>
+                    <Image source={
+                        favorite ? require('../assets/heart-icon-filled.png') : require('../assets/heart-icon.png')} 
+                        style={{resizeMode: 'contain', height: 40, width: 40,  tintColor: '#86DEB7'}}/>
+                </Pressable>
+            </View>
             <Image
                 source={{ uri: "https:" + item.organization.logo }}
                 style={{ width: 256, height: 200, resizeMode: "contain",alignSelf: 'center' }}
