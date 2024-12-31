@@ -1,6 +1,7 @@
 import React from "react";
 import { useState } from "react";
 import { Alert, Text, StyleSheet, TextInput, TouchableOpacity, View } from "react-native";
+import * as Haptics from "expo-haptics";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import app from '../firebaseConfig'
@@ -16,6 +17,13 @@ export default function Login(){
 
     function handleLogin(){
         const auth = getAuth(); 
+        if(email === '' || password === ''){
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+            setError('Please fill out all fields.');
+            setShowError(true);
+            return;
+        }
+
         signInWithEmailAndPassword(auth, email, password)
         .then((userCredential) => {
             console.log(userCredential);
@@ -25,9 +33,11 @@ export default function Login(){
                 signOut(auth);
                 return;
             }
-            navigation.navigate("Profile");
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Soft);
+            navigation.popToTop();
         })
         .catch((error) => {
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
             console.log(error.code);
             if(error.code === 'auth/invalid-credential'){
                 setError('Invalid credentials.');
@@ -60,7 +70,9 @@ export default function Login(){
             <View style={styles.errorView}>
                 {showError && <Text style={{color: 'red'}}>{error}</Text>}
             </View>
-            <TouchableOpacity style={styles.button} onPress={() => handleLogin()}>
+            <TouchableOpacity style={styles.button} onPress={() =>{
+                handleLogin();
+            }}>
                 <Text style={{fontSize: 20}}>Login</Text>
             </TouchableOpacity>
             <View style={{flexDirection: 'row', justifyContent: 'center', marginTop: 20}}>

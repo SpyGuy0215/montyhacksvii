@@ -2,6 +2,7 @@ import React, {useState, useEffect} from "react";
 import { Text, StyleSheet, TouchableOpacity, Alert } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
+import * as Haptics from "expo-haptics";
 import { getAuth, sendPasswordResetEmail, signOut } from "firebase/auth";
 
 
@@ -15,7 +16,9 @@ export default function Profile(){
         // check if user is logged in
         if(auth.currentUser === null){
             navigation.navigate("Login");
+            return; 
         }
+        console.log(auth.currentUser);
 
         const user = auth.currentUser;
         setName(user.displayName);
@@ -35,6 +38,7 @@ export default function Profile(){
     }
 
     function handleSignOut(){
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); 
         signOut(auth)
         .then(() => {
             navigation.navigate("Login");

@@ -46,6 +46,7 @@ export default function SignUp(){
                 console.log(error.code);
                 console.log(error.message);
             })
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Soft);
             navigation.popTo('Login');
         })
         .catch((error) => {
