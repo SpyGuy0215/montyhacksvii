@@ -86,14 +86,14 @@ export default function SignUp(){
                     <TextInput style={styles.passwordInput} placeholder="Password" autoCorrect={false} secureTextEntry={!passwordVisible} 
                     onChangeText={(password) => {setPassword(password)}} textContentType="password"/>
                     <TouchableOpacity onPress={togglePasswordVisibility} style={styles.iconContainer}>
-                        <Image source={require('../assets/favicon.png')} style={styles.icon} />
+                        <Image source={require('../assets/eye.png')} style={styles.icon} />
                     </TouchableOpacity>
                 </View>
                 <View style={styles.passwordContainer}>
                     <TextInput style={styles.passwordInput} placeholder="Retype Password" autoCorrect={false} secureTextEntry={!passwordVisible}
                     onChangeText={(retypePassword) => {setRetypePassword(retypePassword)}} textContentType="password"/>
                     <TouchableOpacity onPress={togglePasswordVisibility} style={styles.iconContainer}>
-                        <Image source={require('../assets/favicon.png')} style={styles.icon} />
+                        <Image source={require('../assets/eye.png')} style={styles.icon} />
                     </TouchableOpacity>
                 </View>
                 <View style={styles.errorView}>
