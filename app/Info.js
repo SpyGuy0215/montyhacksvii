@@ -12,7 +12,6 @@ export default function Info({ route }) {
     const db = getFirestore(app);
     const user = auth.currentUser;
     const navigation = useNavigation();
-    const db = getFirestore();
 
     const [favorite, setFavorite] = useState(false);
 
@@ -180,7 +179,7 @@ export default function Info({ route }) {
             </Pressable>
         </SafeAreaView>
     );
-}
+}}
 
 const styles = StyleSheet.create({
     applyButton: {

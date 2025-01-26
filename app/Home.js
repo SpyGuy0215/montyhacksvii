@@ -1,115 +1,175 @@
-import React, { useEffect, useState } from 'react';
-import { View, StyleSheet, Text, FlatList, Image, TouchableOpacity } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { getAuth, onAuthStateChanged } from "firebase/auth";
-import { getFirestore, doc, getDoc } from "firebase/firestore";
-import app from '../firebaseConfig';
+import React, { useState, useEffect } from "react";
+import * as Haptics from "expo-haptics";
+import {
+  View,
+  Text,
+  StyleSheet,
+  FlatList,
+  Pressable,
+  ScrollView,
+  Image,
+} from "react-native";
+import { StatusBar } from "expo-status-bar";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 
-export default function Home() {
-    const [savedOpportunities, setSavedOpportunities] = useState([]);
-    const auth = getAuth();
-    const db = getFirestore(app);
-    const navigation = useNavigation();
+const API_LIST = [
+  {
+    url: "https://www.volunteerconnector.org/api/search/",
+    name: "Volunteer Connector",
+    schema: "volunteerconnector",
+    searchLinkDepth: 10,
+  },
+];
 
-    useEffect(() => {
-        const unsubscribe = onAuthStateChanged(auth, (user) => {
-            if (user) {
-                fetchSavedOpportunities(user.uid);
-            } else {
-                setSavedOpportunities([]);
-            }
-        });
-
-        return () => unsubscribe();
-    }, []);
-
-    const fetchSavedOpportunities = async (uid) => {
-        const userRef = doc(db, "users", uid);
-        const docSnap = await getDoc(userRef);
-        if (docSnap.exists() && docSnap.data().savedOpportunities) {
-            const savedOpportunities = docSnap.data().savedOpportunities;
-            setSavedOpportunities(savedOpportunities);
-        }
-    };
-
-    const renderItem = ({ item }) => (
-        <TouchableOpacity style={styles.item} onPress={() => navigation.navigate('Info', { item })}>
-            <Image source={{ uri: "https:" + item.organization.logo }} style={styles.logo} />
-            <View style={styles.textContainer}>
-                <Text style={styles.title}>{item.title}</Text>
-                <Text style={styles.organization}>{item.organization.name}</Text>
-                <Text numberOfLines={2} style={styles.description}>{item.description}</Text>
-            </View>
-        </TouchableOpacity>
-    );
-
-    return (
-        <SafeAreaView style={styles.container}>
-            <Text style={styles.header}>Saved Opportunities</Text>
-            <FlatList
-                data={savedOpportunities}
-                keyExtractor={(item) => item.id}
-                renderItem={renderItem}
-                contentContainerStyle={styles.list}
-                ListEmptyComponent={<Text style={styles.emptyText}>No saved opportunities yet.</Text>}
-            />
-        </SafeAreaView>
-    );
+function ListItem({ item, navigation }) {
+  return (
+    <View style={styles.item}>
+      <Pressable
+        onPress={() => {
+          Haptics.selectionAsync();
+          navigation.navigate("Info", {
+            item: item,
+          });
+        }}
+      >
+        <Image
+          source={{ uri: "https:" + item.organization.logo }}
+          style={{
+            width: 256,
+            height: 100,
+            resizeMode: "contain",
+            alignSelf: "center",
+          }}
+        />
+        <Text style={{ marginTop: 5, fontWeight: "600", fontSize: "22" }}>
+          {item.title}
+        </Text>
+        <Text
+          style={{
+            marginLeft: 2,
+            marginTop: 2,
+            fontWeight: "400",
+            fontSize: "12",
+          }}
+        >
+          {item.organization.name}
+        </Text>
+      </Pressable>
+    </View>
+  );
 }
 
-const styles = StyleSheet.create({
-    container: {
+export default function Search() {
+  const [data, setData] = useState([]);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const navigation = useNavigation();
+
+  useEffect(() => {
+    fetchData().then(() => {
+    });
+  }, []);
+
+  async function fetchData() {
+    console.log("inside of fetch data");
+    for (let i = 0; i < API_LIST.length; i++) {
+      let api = API_LIST[i];
+      let tempData = [];
+
+      for (let i = 1; i < api.searchLinkDepth + 1; i++) {
+        const f = await fetch(api.url + "?page=" + i);
+        const response = await f.json();
+
+        if (api["schema"] == "volunteerconnector") {
+
+          for (let i = 0; i < response["results"].length; i++) {
+            let currItem = response["results"][i];
+            let item = {
+              title: currItem["title"],
+              id: currItem["id"],
+              description: currItem["description"],
+              url: currItem["url"],
+              organization: currItem["organization"],
+              locationInformation: {
+                scope: currItem["audience"]["scope"],
+                coordinates:
+                  currItem["audience"]["scope"] == "local"
+                    ? [
+                        currItem["audience"]["longitude"],
+                        currItem["audience"]["latitude"],
+                      ]
+                    : null,
+                regions:
+                  currItem["audience"]["regions"] == null
+                    ? null
+                    : currItem["audience"]["regions"],
+              },
+              isRemote: currItem["remote_or_online"],
+            };
+            tempData.push(item);
+          }
+          setData(tempData);
+        }
+      }
+    }
+  }
+
+  return (
+    <SafeAreaView
+      style={{
         flex: 1,
-        backgroundColor: 'white',
-    },
-    header: {
-        fontSize: 24,
-        fontWeight: 'bold',
-        textAlign: 'center',
-        marginVertical: 20,
-    },
-    list: {
-        paddingHorizontal: 16,
-    },
-    item: {
-        flexDirection: 'row',
-        backgroundColor: '#f9f9f9',
-        padding: 16,
-        marginVertical: 8,
-        borderRadius: 8,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 8,
-        elevation: 2,
-    },
-    logo: {
-        width: 60,
-        height: 60,
-        resizeMode: 'contain',
-        marginRight: 16,
-    },
-    textContainer: {
-        flex: 1,
-    },
-    title: {
-        fontSize: 18,
-        fontWeight: 'bold',
-    },
-    organization: {
-        fontSize: 14,
-        color: '#666',
-        marginVertical: 4,
-    },
-    description: {
-        fontSize: 14,
-        color: '#333',
-    },
-    emptyText: {
-        textAlign: 'center',
-        marginTop: 20,
-        fontSize: 16,
-        color: '#666',
-    },
+        alignItems: "center",
+        justifyContent: "center",
+        backgroundColor: "white",
+        width: "100%",
+      }}
+      edges={['top', 'right', 'left']}
+    >
+      {data.length == 0 ? (
+        <Text>Loading...</Text>
+      ) : (
+        <>
+          <FlatList
+            style={{ flex: 1, width: '93%', marginLeft: 1}}
+            showsVerticalScrollIndicator={false}
+            data={data}
+            keyExtractor={(item) => item.id}
+            renderItem={({ item }) => (
+              <>
+                <ListItem item={item} navigation={navigation} />
+                <View
+                  style={{
+                    borderBottomColor: "lightgray",
+                    borderBottomWidth: 1.2,
+                  }}
+                />
+              </>
+            )}
+            onRefresh={() => {
+              setRefreshing(true);
+              fetchData()
+                .then(() => {
+                  setRefreshing(false);
+                })
+                .catch((error) => {
+                  console.error(error);
+                });
+            }}
+            refreshing={refreshing}
+          />
+        </>
+      )}
+    </SafeAreaView>
+  );
+}
+
+styles = StyleSheet.create({
+  item: {
+    backgroundColor: "white",
+    width: "100%",
+    height: "fit",
+    marginTop: 12,
+    marginBottom: 12,
+  },
 });
