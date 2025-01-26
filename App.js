@@ -35,7 +35,7 @@ const AuthStack = createNativeStackNavigator({
   },
   screens: {
     Profile: {
-        screen: Profile,
+      screen: Profile,
     },
     Login: {
       screen: Login,
@@ -74,7 +74,7 @@ const Tabs = createBottomTabNavigator({
         }
       },
     },
-    ProfileStack: {
+    AuthStack: {
       screen: AuthStack,
       options: {
         tabBarIcon: (tabInfo) => {

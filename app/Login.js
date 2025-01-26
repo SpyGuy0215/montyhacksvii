@@ -1,5 +1,5 @@
 import React from "react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Alert, Text, StyleSheet, TextInput, TouchableOpacity, View } from "react-native";
 import * as Haptics from "expo-haptics";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -7,13 +7,37 @@ import { useNavigation } from "@react-navigation/native";
 import app from '../firebaseConfig'
 import { getAuth, signInWithEmailAndPassword, signOut, sendPasswordResetEmail } from "firebase/auth";
 
-export default function Login(){
+export default function Login({route}){
     const navigation = useNavigation();
+    let redirectRoute = null; 
+    let payload = null;
+    try{
+        redirectRoute = route.params.redirectRoute;
+        payload = route.params.payload
+    }
+    catch(e){
+        console.log(e)
+        console.log('No redirect route');
+    }
+
+    console.log(route.params); 
+    console.log('^^^ route.params for Login.js');
 
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [showError, setShowError] = useState(false);
     const [error, setError] = useState('');
+
+    useEffect(() => {
+        const focusActions = navigation.addListener('focus', () => {
+            const auth = getAuth();
+            if(auth.currentUser !== null){
+                navigation.replace('Profile');
+            }
+        }); 
+
+        return focusActions; // cleanup function
+    }, [navigation])
 
     function handleLogin(){
         const auth = getAuth(); 
@@ -34,9 +58,19 @@ export default function Login(){
                 return;
             }
             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Soft);
-            navigation.popToTop();
+
+            console.log('Signed in');
+            console.log(redirectRoute);
+            console.log(payload);
+            if(redirectRoute){
+                redirectToScreen(redirectRoute, payload);
+            }
+            else{
+                navigation.replace('Profile');
+        }
         })
         .catch((error) => {
+            console.log(error);
             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
             console.log(error.code);
             if(error.code === 'auth/invalid-credential'){
@@ -60,6 +94,17 @@ export default function Login(){
             console.log(error.code);
             console.log(error.message);
         })
+    }
+
+    function redirectToScreen(redirectRoute, payload){
+        if(redirectRoute == 'SearchStack/Info'){
+            navigation.navigate('SearchStack', {
+                screen: 'Info',
+                params: {
+                    item: payload
+                }
+            })
+        }
     }
 
     return(

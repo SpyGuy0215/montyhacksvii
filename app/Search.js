@@ -67,10 +67,7 @@ export default function Search() {
   const navigation = useNavigation();
 
   useEffect(() => {
-    console.log("fetching data");
-    console.log(data.length);
     fetchData().then(() => {
-      console.log("done fetching data!");
     });
   }, []);
 
@@ -83,10 +80,8 @@ export default function Search() {
       for (let i = 1; i < api.searchLinkDepth + 1; i++) {
         const f = await fetch(api.url + "?page=" + i);
         const response = await f.json();
-        console.log('response recieved from page ' + i);
 
         if (api["schema"] == "volunteerconnector") {
-          console.log(response["results"].length + " opportunities found");
 
           for (let i = 0; i < response["results"].length; i++) {
             let currItem = response["results"][i];
@@ -118,8 +113,6 @@ export default function Search() {
         }
       }
     }
-    console.log(data.length);
-    console.log("^^^ data length");
   }
 
   return (
@@ -131,6 +124,7 @@ export default function Search() {
         backgroundColor: "white",
         width: "100%",
       }}
+      edges={['top', 'right', 'left']}
     >
       {data.length == 0 ? (
         <Text>Loading...</Text>

@@ -41,7 +41,7 @@ export default function Profile(){
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); 
         signOut(auth)
         .then(() => {
-            navigation.navigate("Login");
+            navigation.replace("Login");
         })
         .catch((error) => {
             console.log(error.code);
@@ -50,7 +50,7 @@ export default function Profile(){
     }
 
     return(
-        <SafeAreaView>
+        <SafeAreaView style={{flex: 1, backgroundColor: 'white'}}>
             <Text style={styles.header}>{name}</Text>
             <Text style={styles.item}>Email: {email}</Text>
             <TouchableOpacity style={styles.button} onPress={() => handleResetPassword()}>

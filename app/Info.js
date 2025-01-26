@@ -1,22 +1,103 @@
-import { useNavigation } from "@react-navigation/native";
-import React, {useState} from "react";
-import { SafeAreaView, Text, Image, ScrollView, Pressable, StyleSheet, View } from "react-native";
+import React, {useEffect, useState} from "react";
+import { Alert, SafeAreaView, Text, Image, ScrollView, Pressable, StyleSheet, View } from "react-native";
 import * as Haptics from "expo-haptics";
 import * as WebBrowser from "expo-web-browser";
+import { useNavigation } from "@react-navigation/native";
+import { getAuth } from "firebase/auth";
+import { getFirestore, setDoc, doc, collection, deleteDoc, addDoc, query, where, getDocs, collectionGroup } from "firebase/firestore";
 
 export default function Info({route}) {
     const item = route.params.item;
+    const navigation = useNavigation();
+    const db = getFirestore();
 
     const [favorite, setFavorite] = useState(false);
 
-    function handleFavorite() {
+    useEffect(() => {
+        const auth = getAuth();
+
+        // check if already favorited
+        const checkFavorite = async () => {
+            if(auth.currentUser === null){
+                return;
+            }
+
+            const documentRef = doc(db, 'users', auth.currentUser.uid)
+            const collectionRef = collection(documentRef, 'favorites')
+            const q = query(collectionRef, where('id', '==', item.id));
+            const querySnapshot = await getDocs(q);
+            if(querySnapshot.size > 0){
+                setFavorite(true);
+            }
+        }
+        checkFavorite();
+
+    }, []); 
+
+    async function handleFavorite() {
+        const auth = getAuth();
+        const isSignedIn = auth.currentUser !== null;
+
+        if(!isSignedIn){
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+            Alert.alert('Sign In Required', 'Please sign in to save opportunities.', [
+                {text: 'Sign In', onPress: () => navigation.navigate('AuthStack', {
+                    screen: 'Login',
+                    params: {
+                        redirectRoute: 'SearchStack/Info',
+                        payload: item
+                    }
+                })},
+                {text: 'Cancel', onPress: () => console.log('Cancel Pressed'), style: 'cancel'}
+            ]);
+            return;
+        }
+
+        setFavorite(!favorite);
+
         if(favorite){
             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+            // remove from favorites
+            console.log('unfavoriting');
+            const documentRef = doc(db, 'users', auth.currentUser.uid)
+            const collectionRef = collection(documentRef, 'favorites')
+            try{
+                const q = query(collectionRef, where('id', '==', item.id));
+                const querySnapshot = await getDocs(q);
+                querySnapshot.forEach((doc) => {
+                    deleteDoc(doc.ref);
+                    console.log('deleted doc: ', doc.id);
+                }); 
+                console.log('unfavorited')
+            }
+            catch(e){
+                console.log(e);
+            }
         }
         else{
             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+            // add to favorites
+            const documentRef = doc(db, 'users', auth.currentUser.uid);
+            const collectionRef = collection(documentRef, 'favorites');
+            console.log('created refs')
+
+            // check if already exists
+            const q = query(collectionRef, where('id', '==', item.id));
+            const querySnapshot = await getDocs(q);
+            console.log(querySnapshot.size); 
+            if(querySnapshot.size > 0){
+                console.log('already exists');
+                return;
+            }
+
+            await addDoc(collectionRef, item)
+            .then(() => {
+                console.log('Document successfully written!');
+            })
+            .catch((error) => {
+                console.error('Error writing document: ', error);
+            });
         }
-        setFavorite(!favorite);
     }
 
     return (
@@ -32,8 +113,13 @@ export default function Info({route}) {
                 source={{ uri: "https:" + item.organization.logo }}
                 style={{ width: 256, height: 200, resizeMode: "contain",alignSelf: 'center' }}
             />
-            <Text style={{marginLeft: 15, fontSize: 25, fontWeight: '700'}}>{item.title}</Text>
+            <Text style={{marginLeft: 15, fontSize: 25, fontWeight: '700', marginRight: 15}}>{item.title}</Text>
             <Text style={{marginTop: 8, marginLeft: 16, fontSize: 15, fontWeight: '400'}}>{item.organization.name}</Text>
+            {item.isRemote ?
+                
+                <Text style={styles.remoteTextStyle}>Remote</Text> :
+                <Text style={styles.inPersonTextStyle}>In Person</Text>  
+            }
             <ScrollView style={{marginLeft: 15, marginRight: 15, marginTop: 15}}>
                 <Text>{item.description}</Text>
             </ScrollView>
@@ -57,5 +143,17 @@ const styles = StyleSheet.create({
         height: 40,
         width: '50%',
         borderRadius: 10,
+    },
+    inPersonTextStyle: {
+        color: '#8ac926',
+        fontWeight: 'bold', 
+        marginLeft: 18,
+        marginTop: 5,
+    },
+    remoteTextStyle:{
+        color: '#1982c4',
+        fontWeight: 'bold', 
+        marginLeft: 18,
+        marginTop: 5,
     }
 })
