@@ -12,7 +12,7 @@ import {
 import { StatusBar } from "expo-status-bar";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
-import { getDocs, collection, getFirestore } from "firebase/firestore";
+import { getDocs, collection, getFirestore, updateDoc } from "firebase/firestore";
 
 const API_LIST = [
     {
@@ -71,7 +71,7 @@ export default function Search() {
     const db = getFirestore();
 
     useEffect(() => {
-        fetchData().then(() => {});
+        fetchData();    
     }, []);
 
     async function fetchData() {
@@ -93,6 +93,32 @@ export default function Search() {
         }
     }
     
+    async function repairData(){
+        // check data from firebase for missing fields
+        const d = new Date(); 
+        try{
+            const querySnapshot = await getDocs(collection(db, "opportunities"));
+            // check if missing field:
+            // timeAdded
+            // if missing, add it in
+            querySnapshot.forEach(async (doc) => {
+                const data = doc.data();
+                if (!data.timeAdded) {
+                    console.log('updating missing field...')
+                    updateDoc(doc.ref, {timeAdded: d.getTime()})
+                    .then(() => { 
+                        console.log('updated doc: ', doc.id);
+                    })
+                    .catch((error) => {
+                        console.log('error updating doc: ', doc.id, error);
+                    })
+                }
+            });
+        }
+        catch(e){
+            console.log(e);
+        }
+    }
 
     return (
         <SafeAreaView
