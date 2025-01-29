@@ -15,6 +15,20 @@ import Info from "./app/Info";
 import { useEffect } from "react";
 import Profile from "./app/Profile";
 
+const HomeStack = createNativeStackNavigator({
+    screenOptions: {
+        headerShown: false,
+    },
+    screens: {
+        Home: {
+            screen: Home,
+        },
+        Info: {
+            screen: Info,
+        },
+    }
+}); 
+
 const SearchStack = createNativeStackNavigator({
   screenOptions:{
     headerShown: false,
@@ -53,7 +67,7 @@ const Tabs = createBottomTabNavigator({
   },
   screens: {
     Home: {
-      screen: Home,
+      screen: HomeStack,
       options: {
         tabBarIcon: (tabInfo) => {
           return (

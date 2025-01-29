@@ -77,6 +77,7 @@ export default function Info({route}) {
         else{
             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
             // add to favorites
+            console.log('adding to favorite...');
             const documentRef = doc(db, 'users', auth.currentUser.uid);
             const collectionRef = collection(documentRef, 'favorites');
             console.log('created refs')
@@ -121,7 +122,7 @@ export default function Info({route}) {
                 <Text style={styles.inPersonTextStyle}>In Person</Text>  
             }
             <ScrollView style={{marginLeft: 15, marginRight: 15, marginTop: 15}}>
-                <Text>{item.description}</Text>
+                <Text className={'leading-5'}>{item.description}</Text>
             </ScrollView>
             <Pressable style={styles.applyButton} onPress={() => {
                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Soft);
