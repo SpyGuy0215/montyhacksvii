@@ -92,49 +92,7 @@ export default function Search() {
             console.log("error: " + e);
         }
     }
-
-    async function fetchDataLEGACY() {
-        console.log("inside of fetch data");
-        for (let i = 0; i < API_LIST.length; i++) {
-            let api = API_LIST[i];
-            let tempData = [];
-
-            for (let i = 1; i < api.searchLinkDepth + 1; i++) {
-                const f = await fetch(api.url + "?page=" + i);
-                const response = await f.json();
-
-                if (api["schema"] == "volunteerconnector") {
-                    for (let i = 0; i < response["results"].length; i++) {
-                        let currItem = response["results"][i];
-                        let item = {
-                            title: currItem["title"],
-                            id: currItem["id"],
-                            description: currItem["description"],
-                            url: currItem["url"],
-                            organization: currItem["organization"],
-                            locationInformation: {
-                                scope: currItem["audience"]["scope"],
-                                coordinates:
-                                    currItem["audience"]["scope"] == "local"
-                                        ? [
-                                              currItem["audience"]["longitude"],
-                                              currItem["audience"]["latitude"],
-                                          ]
-                                        : null,
-                                regions:
-                                    currItem["audience"]["regions"] == null
-                                        ? null
-                                        : currItem["audience"]["regions"],
-                            },
-                            isRemote: currItem["remote_or_online"],
-                        };
-                        tempData.push(item);
-                    }
-                    setData(tempData);
-                }
-            }
-        }
-    }
+    
 
     return (
         <SafeAreaView
