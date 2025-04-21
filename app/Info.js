@@ -3,6 +3,7 @@ import { Alert, SafeAreaView, Text, Image, ScrollView, Pressable, StyleSheet, Vi
 import * as Haptics from "expo-haptics";
 import * as WebBrowser from "expo-web-browser";
 import { getAuth } from "firebase/auth";
+import { useNavigation } from "@react-navigation/native";
 import { getFirestore, doc, updateDoc, arrayUnion, arrayRemove, getDoc, setDoc } from "firebase/firestore";
 import app from '../firebaseConfig';
 
@@ -27,40 +28,6 @@ export default function Info({ route }) {
         }
     }, [user, item.id]);
 
-    async function handleFavorite() {
-        if (user) {
-            const userRef = doc(db, "users", user.uid);
-            const docSnap = await getDoc(userRef);
-
-            if (!docSnap.exists()) {
-                await setDoc(userRef, { savedOpportunities: [] });
-            }
-
-            if (favorite) {
-                await updateDoc(userRef, {
-                    savedOpportunities: arrayRemove({
-                        id: item.id,
-                        title: item.title,
-                        description: item.description,
-                        organization: item.organization,
-                        url: item.url,
-                    }),
-                });
-            } else {
-                await updateDoc(userRef, {
-                    savedOpportunities: arrayUnion({
-                        id: item.id,
-                        title: item.title,
-                        description: item.description,
-                        organization: item.organization,
-                        url: item.url,
-                    }),
-                });
-            }
-
-            Haptics.impactAsync(favorite ? Haptics.ImpactFeedbackStyle.Light : Haptics.ImpactFeedbackStyle.Medium);
-            setFavorite(!favorite);
-        }
     useEffect(() => {
         const auth = getAuth();
 
@@ -180,7 +147,8 @@ export default function Info({ route }) {
             </Pressable>
         </SafeAreaView>
     );
-}}
+}
+
 
 const styles = StyleSheet.create({
     applyButton: {

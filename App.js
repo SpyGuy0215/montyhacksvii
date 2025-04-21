@@ -1,5 +1,7 @@
 import { StatusBar } from "expo-status-bar";
 import { StyleSheet, Text, View, LogBox, Image } from "react-native";
+import * as eva from "@eva-design/eva";
+import { ApplicationProvider } from "@ui-kitten/components";
 
 import { initializeApp } from "firebase/app";
 
@@ -10,7 +12,7 @@ import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import Login from "./app/Login";
 import Home from "./app/Home";
 import SignUp from "./app/SignUp";
-import Search from "./app/Search";
+import Search, {FilterModal} from "./app/Search";
 import Info from "./app/Info";
 import { useEffect } from "react";
 import Profile from "./app/Profile";
@@ -33,14 +35,28 @@ const SearchStack = createNativeStackNavigator({
   screenOptions:{
     headerShown: false,
   },
-  screens: {
-    Search: {
-      screen: Search,
-    },
-    Info: {
-      screen: Info,
+    groups:{
+        SearchBase:{
+            screens:{
+                Search: {
+                    screen: Search,
+                  },
+                  Info: {
+                    screen: Info,
+                  }
+            }
+        },
+        FilterModal: {
+            screenOptions: {
+                presentation: 'modal',
+            },
+            screens: {
+                FilterModal: {
+                    screen: FilterModal,
+                }
+            }
+        }
     }
-  }
 });
 
 const AuthStack = createNativeStackNavigator({
